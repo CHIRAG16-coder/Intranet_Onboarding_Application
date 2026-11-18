@@ -2,9 +2,10 @@
 package com.sumpositive.onboarding.security;
 
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.web.cors.CorsConfigurationSource;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -23,39 +24,45 @@ public class SecurityConfig {
 	private final CustomUserDetailsService userDetailsService;
 	private final CorsConfigurationSource corsConfigurationSource;
 
-	public SecurityConfig(
-	        JwtAuthenticationFilter jwtFilter,
-	        CustomUserDetailsService userDetailsService,
-	        CorsConfigurationSource corsConfigurationSource) {
+	public SecurityConfig(JwtAuthenticationFilter jwtFilter, CustomUserDetailsService userDetailsService,
+			CorsConfigurationSource corsConfigurationSource) {
 
-	    this.jwtFilter = jwtFilter;
-	    this.userDetailsService = userDetailsService;
-	    this.corsConfigurationSource = corsConfigurationSource;
+		this.jwtFilter = jwtFilter;
+		this.userDetailsService = userDetailsService;
+		this.corsConfigurationSource = corsConfigurationSource;
 	}
 
+	// Password encoder
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
 
+	// Authentication provider
 	@Bean
 	public AuthenticationProvider authenticationProvider() {
+
 		DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+
 		provider.setPasswordEncoder(passwordEncoder());
+
 		return provider;
 	}
 
+	// Authentication manager
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+
 		return configuration.getAuthenticationManager();
 	}
 
+	// Security filter chain
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-		http
-		.cors(cors -> cors.configurationSource(corsConfigurationSource))
-	    .csrf(csrf -> csrf.disable())
+		http.cors(cors -> cors.configurationSource(corsConfigurationSource))
+
+				.csrf(csrf -> csrf.disable())
 
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
@@ -67,10 +74,16 @@ public class SecurityConfig {
 						// Public authentication APIs
 						.requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
 
-						// Allow CORS preflight requests
+						// CORS preflight
 						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-						// All remaining APIs require authentication
+						// Admin APIs: ADMIN role only
+						.requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+						// Chatbot requires authentication
+						.requestMatchers("/api/chatbot/**").authenticated()
+
+						// All other APIs require authentication
 						.anyRequest().authenticated())
 
 				.authenticationProvider(authenticationProvider())

@@ -3,8 +3,12 @@ package com.sumpositive.onboarding.entity;
 
 import java.time.LocalDateTime;
 
+import com.sumpositive.onboarding.enums.Role;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,11 +40,19 @@ public class User {
 	@Column(nullable = false, length = 255)
 	private String password;
 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 20)
+	private Role role = Role.USER;
+
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;
 
 	@PrePersist
 	public void onCreate() {
 		this.createdAt = LocalDateTime.now();
+
+		if (this.role == null) {
+			this.role = Role.USER;
+		}
 	}
 }

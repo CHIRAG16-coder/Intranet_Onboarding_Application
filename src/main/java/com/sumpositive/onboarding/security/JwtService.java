@@ -13,51 +13,56 @@ import javax.crypto.SecretKey;
 
 import java.util.Date;
 
+import com.sumpositive.onboarding.entity.User;
+
 @Service
-public class JwtService 
-{
+public class JwtService {
 
-    @Value("${app.jwt.secret}")
-    private String secret;
+	@Value("${app.jwt.secret}")
+	private String secret;
 
-    @Value("${app.jwt.expiration}")
-    private long expiration;
+	@Value("${app.jwt.expiration}")
+	private long expiration;
 
-    private SecretKey getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
+	private SecretKey getSigningKey() {
+		byte[] keyBytes = Decoders.BASE64.decode(secret);
+		return Keys.hmacShaKeyFor(keyBytes);
+	}
 
-    public String generateToken(String email) {
-        Date now = new Date();
-        Date expiry = new Date(now.getTime() + expiration);
+	// Generate JWT token with user role
+	public String generateToken(User user) {
 
-        return Jwts.builder()
-        		   .subject(email)
-        		   .issuedAt(now)
-        		   .expiration(expiry)
-        		   .signWith(getSigningKey())
-        		   .compact();
-    }
+		Date now = new Date();
+		Date expiry = new Date(now.getTime() + expiration);
 
-    public String extractEmail(String token) {
-        return extractAllClaims(token).getSubject();
-    }
+		return Jwts.builder().subject(user.getEmail()).claim("role", user.getRole().name()).issuedAt(now)
+				.expiration(expiry).signWith(getSigningKey()).compact();
+	}
 
-    public boolean isTokenValid(String token,String email) {
-        Claims claims = extractAllClaims(token);
-        return claims.getSubject().equals(email) && claims.getExpiration().after(new Date());
-    }
+	// Extract email
+	public String extractEmail(String token) {
+		return extractAllClaims(token).getSubject();
+	}
 
-    public long getExpiration() {
-        return expiration;
-    }
+	// Extract role
+	public String extractRole(String token) {
+		return extractAllClaims(token).get("role", String.class);
+	}
 
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                   .verifyWith(getSigningKey())
-                   .build()
-                   .parseSignedClaims(token)
-                   .getPayload();
-    }
+	// Validate JWT token
+	public boolean isTokenValid(String token, String email) {
+
+		Claims claims = extractAllClaims(token);
+
+		return claims.getSubject().equals(email) && claims.getExpiration().after(new Date());
+	}
+
+	public long getExpiration() {
+		return expiration;
+	}
+
+	private Claims extractAllClaims(String token) {
+
+		return Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload();
+	}
 }
