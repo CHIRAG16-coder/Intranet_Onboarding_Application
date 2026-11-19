@@ -507,14 +507,5 @@ Add an appropriate open-source license before allowing others to reuse or redist
   ```
 </box>
 
-## One important recommendation
 
-Before publishing, verify these three things:
 
-- Your actual Java version from `pom.xml`.
-- Your actual database and JWT property names.
-- Which APIs are implemented versus still pending.
-
-I have intentionally described the features based on the development details you've shared, but the README should not claim that unverified functionality is fully tested.
-
-**My next recommendation:** Add a `screenshots` folder containing Swagger UI, Admin Dashboard, and API response screenshots. This will make your GitHub repository look much more professional to recruiters and developers.
