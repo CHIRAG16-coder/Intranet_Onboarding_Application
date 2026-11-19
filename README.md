@@ -504,7 +504,6 @@ Add an appropriate open-source license before allowing others to reuse or redist
   git add README.md
   git commit -m "Add project documentation"
   git push origin main
-  ```
 </box>
 
 
